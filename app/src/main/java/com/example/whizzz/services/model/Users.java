@@ -3,8 +3,7 @@ package com.example.whizzz.services.model;
 public class Users {
 
 
-
-    public Users(String id, String username, String emailId, String timestamp, String imageUrl, String bio,String status) {
+    public Users(String id, String username, String emailId, String timestamp, String imageUrl, String bio, String status, String publicKey) {
         this.id = id;
         this.username = username;
         this.emailId = emailId;
@@ -70,6 +69,13 @@ public class Users {
         this.status = status;
     }
 
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
 
     private String id;
     private String username;
@@ -77,18 +83,15 @@ public class Users {
     private String timestamp;
     private String imageUrl;
     private String bio;
-
+    private String publicKey;
 
 
     private String status;
 
 
-
     public Users() {
 
     }
-
-
 
 
 }

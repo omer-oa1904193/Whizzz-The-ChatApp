@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class FirebaseInstanceDatabase {
-        private FirebaseDatabase instance = FirebaseDatabase.getInstance();
+    private FirebaseDatabase instance = FirebaseDatabase.getInstance();
     private FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
     private StorageReference storageReference = FirebaseStorage.getInstance().getReference("uploads");
 
@@ -322,7 +322,7 @@ public class FirebaseInstanceDatabase {
 
     public MutableLiveData<Boolean> addStatusInDatabase(String statusUpdated, Object status) {
         final MutableLiveData<Boolean> successAddStatus = new MutableLiveData<>();
-        String id=firebaseUser.getUid();
+        String id = firebaseUser.getUid();
 
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users");
         HashMap<String, Object> map = new HashMap<>();
@@ -331,7 +331,7 @@ public class FirebaseInstanceDatabase {
         ref.child(id).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
+                if (dataSnapshot.exists()) {
                     ref.child(id).updateChildren(map);
                     successAddStatus.setValue(true);
                 } else {
@@ -339,6 +339,7 @@ public class FirebaseInstanceDatabase {
                     successAddStatus.setValue(false);
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 successAddStatus.setValue(false);
@@ -348,7 +349,7 @@ public class FirebaseInstanceDatabase {
     }
 
 
-    public MutableLiveData<Boolean> addUserInDatabase(String userId, String userName, String emailId, String timestamp, String imageUrl) {
+    public MutableLiveData<Boolean> addUserInDatabase(String userId, String userName, String emailId, String timestamp, String imageUrl, String publicKey) {
         final MutableLiveData<Boolean> successAddUserDb = new MutableLiveData<>();
 
         HashMap<String, String> hashMap = new HashMap<>();
@@ -360,6 +361,7 @@ public class FirebaseInstanceDatabase {
         hashMap.put("bio", "Hey there!");
         hashMap.put("status", "offline");
         hashMap.put("search", userName.toLowerCase());
+        hashMap.put("publicKey", publicKey);
 
         instance.getReference("Users").child(userId).setValue(hashMap).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override

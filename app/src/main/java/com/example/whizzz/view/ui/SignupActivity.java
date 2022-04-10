@@ -2,7 +2,10 @@ package com.example.whizzz.view.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
@@ -25,7 +28,11 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.prefs.Preferences;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -130,12 +137,27 @@ public class SignupActivity extends AppCompatActivity {
                     } catch (FirebaseAuthInvalidCredentialsException malformedEmail) {
                         Toast.makeText(context, "Invalid credentials, please try again.", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
+                        e.printStackTrace();
                         Toast.makeText(context, "SignUp unsuccessful. Try again.", Toast.LENGTH_SHORT).show();
                     }
 
                 } else {
+                    //generate key pair
+                    KeyPairGenerator generator = null;
+                    try {
+                        generator = KeyPairGenerator.getInstance("RSA");
+                        generator.initialize(4096);
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    }
+                    KeyPair pair = generator.generateKeyPair();
+                    PreferenceManager.getDefaultSharedPreferences(SignupActivity.this)
+                            .edit()
+                            .putString("private_key", Base64.encodeToString(pair.getPrivate().getEncoded(), Base64.DEFAULT))
+                            .apply();
+
                     getUserSession();
-                    addUserInDatabase(userName, emailId, userId);
+                    addUserInDatabase(userName, emailId, userId, Base64.encodeToString(pair.getPublic().getEncoded(), Base64.DEFAULT));
                     Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish();
@@ -145,12 +167,12 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
-    private void addUserInDatabase(String userName, String email, String idUser) {
+    private void addUserInDatabase(String userName, String email, String idUser, String publicKey) {
         long tsLong = System.currentTimeMillis();
         timeStamp = Long.toString(tsLong);
         imageUrl = "default";
         userId = currentUser.getUid();
-        databaseViewModel.addUserDatabase(userId, userName, email, timeStamp, imageUrl);
+        databaseViewModel.addUserDatabase(userId, userName, email, timeStamp, imageUrl, publicKey);
         databaseViewModel.successAddUserDb.observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean aBoolean) {

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.whizzz.R;
 import com.example.whizzz.services.model.Chats;
+import com.example.whizzz.viewModel.SecurityUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageH
     @Override
     public void onBindViewHolder(@NonNull MessageHolder holder, int position) {
         Chats chats = chatArrayList.get(position);
-        String message = chats.getMessage();
+        String message = SecurityUtils.decryptMessage(holder.itemView.getContext(), chats.getMessage());
         String timeStamp = chats.getTimestamp();
         boolean isSeen = chats.getSeen();
         long intTimeStamp = Long.parseLong(timeStamp);

@@ -30,14 +30,12 @@ public class DatabaseViewModel extends ViewModel {
     public LiveData<DatabaseReference> getTokenRefDb;
 
 
-
-
     public DatabaseViewModel() {
         instance = new FirebaseInstanceDatabase();
     }
 
-    public void addUserDatabase(String userId, String userName, String emailId, String timestamp, String imageUrl) {
-        successAddUserDb = instance.addUserInDatabase(userId, userName, emailId, timestamp, imageUrl);
+    public void addUserDatabase(String userId, String userName, String emailId, String timestamp, String imageUrl, String publicKey) {
+        successAddUserDb = instance.addUserInDatabase(userId, userName, emailId, timestamp, imageUrl, publicKey);
     }
 
     public void fetchingUserDataCurrent() {
@@ -52,7 +50,7 @@ public class DatabaseViewModel extends ViewModel {
         fetchSelectedProfileUserData = instance.fetchSelectedUserIdData(userId);
     }
 
-    public void addChatDb(String receiverId,String senderId, String message, String timestamp) {
+    public void addChatDb(String receiverId, String senderId, String message, String timestamp) {
         successAddChatDb = instance.addChatsInDatabase(receiverId, senderId, message, timestamp);
     }
 
@@ -76,23 +74,23 @@ public class DatabaseViewModel extends ViewModel {
         successAddUsernameInDatabase = instance.addUsernameInDatabase(usernameUpdated, username);
     }
 
-    public void addStatusInDatabase(String statusUpdated,Object status){
+    public void addStatusInDatabase(String statusUpdated, Object status) {
         successAddStatusInDatabase = instance.addStatusInDatabase(statusUpdated, status);
     }
 
-    public void fetchSearchedUser(String searchQuery){
+    public void fetchSearchedUser(String searchQuery) {
         fetchSearchUser = instance.fetchSearchUser(searchQuery);
     }
 
-    public void addIsSeenInDatabase(String isSeen,DataSnapshot dataSnapshot){
-        successAddIsSeen = instance.addIsSeenInDatabase(isSeen,dataSnapshot);
+    public void addIsSeenInDatabase(String isSeen, DataSnapshot dataSnapshot) {
+        successAddIsSeen = instance.addIsSeenInDatabase(isSeen, dataSnapshot);
     }
 
-    public void getChaListUserDataSnapshot(String currentUserId){
+    public void getChaListUserDataSnapshot(String currentUserId) {
         getChaListUserDataSnapshot = instance.getChatList(currentUserId);
     }
 
-    public void getTokenDatabaseRef(){
+    public void getTokenDatabaseRef() {
         getTokenRefDb = instance.getTokenRef();
     }
 

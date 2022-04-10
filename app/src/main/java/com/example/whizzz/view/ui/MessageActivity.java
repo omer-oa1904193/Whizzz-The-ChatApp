@@ -31,6 +31,7 @@ import com.example.whizzz.view.fragments.APIService;
 import com.example.whizzz.view.fragments.BottomSheetProfileDetailUser;
 import com.example.whizzz.viewModel.DatabaseViewModel;
 import com.example.whizzz.viewModel.LogInViewModel;
+import com.example.whizzz.viewModel.SecurityUtils;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -76,6 +77,7 @@ public class MessageActivity extends AppCompatActivity {
 
     APIService apiService;
     boolean notify = false;
+    private String profile_user_public_key;
 
 
     @Override
@@ -103,7 +105,7 @@ public class MessageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 notify = true;
 
-                chat = et_chat.getText().toString().trim();
+                chat = SecurityUtils.encryptMessage( profile_user_public_key, et_chat.getText().toString().trim());
                 if (!chat.equals("")) {
                     addChatInDataBase();
                 } else {
@@ -133,10 +135,9 @@ public class MessageActivity extends AppCompatActivity {
     }
 
 
-
     private void fetchAndSaveCurrentProfileTextAndData() {
-        if(userId_receiver == null){
-            userId_receiver=  getIntent().getStringExtra("userId");
+        if (userId_receiver == null) {
+            userId_receiver = getIntent().getStringExtra("userId");
         }
         databaseViewModel.fetchSelectedUserProfileData(userId_receiver);
         databaseViewModel.fetchSelectedProfileUserData.observe(this, new Observer<DataSnapshot>() {
@@ -166,6 +167,7 @@ public class MessageActivity extends AppCompatActivity {
                 } else {
                     Glide.with(getApplicationContext()).load(profileImageURL).into(iv_profile_image);
                 }
+                profile_user_public_key = user.getPublicKey();
                 fetchChatFromDatabase(userId_receiver, userId_sender);
             }
         });
@@ -337,7 +339,7 @@ public class MessageActivity extends AppCompatActivity {
 
     }
 
-    private void currentUser(String userid){
+    private void currentUser(String userid) {
         SharedPreferences.Editor editor = getSharedPreferences("PREFS", MODE_PRIVATE).edit();
         editor.putString("currentuser", userid);
         editor.apply();
