@@ -48,7 +48,6 @@ public class UserFragment extends Fragment {
     }
 
 
-
     private void fetchingAllUserNAme() {
         databaseViewModel.fetchingUserDataCurrent();
         databaseViewModel.fetchUserCurrentData.observe(this, new Observer<DataSnapshot>() {
@@ -77,7 +76,7 @@ public class UserFragment extends Fragment {
 
                             }
                         }
-                        userFragmentAdapter = new UserFragmentAdapter(mUSer, context, false);
+                        userFragmentAdapter = new UserFragmentAdapter(mUSer, null, context, false);
                         recyclerView.setAdapter(userFragmentAdapter);
 
                     }
@@ -106,7 +105,7 @@ public class UserFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    searchUsers(s.toString().toLowerCase());
+                searchUsers(s.toString().toLowerCase());
             }
 
             @Override
@@ -134,12 +133,12 @@ public class UserFragment extends Fragment {
                         }
 
                     }
-                    userFragmentAdapter = new UserFragmentAdapter(mUSer, context, false);
+                    userFragmentAdapter = new UserFragmentAdapter(mUSer, null, context, false);
                     recyclerView.setAdapter(userFragmentAdapter);
 
                 }
             });
-        }else {
+        } else {
             fetchingAllUserNAme();
         }
     }

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.whizzz.R;
+import com.example.whizzz.services.model.ChatList;
 import com.example.whizzz.services.model.Users;
 import com.example.whizzz.view.fragments.BottomSheetProfileDetailUser;
 import com.example.whizzz.view.ui.MessageActivity;
@@ -27,12 +28,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class UserFragmentAdapter extends RecyclerView.Adapter<UserFragmentAdapter.UserFragmentHolder> {
 
     private ArrayList<Users> usersArrayList;
+    private ArrayList<ChatList> chatListArrayList;
     private Context context;
     private BottomSheetProfileDetailUser bottomSheetProfileDetailUser;
     private Boolean isChat;
 
-    public UserFragmentAdapter(ArrayList<Users> usersArrayList, Context context, Boolean isChat) {
+    public UserFragmentAdapter(ArrayList<Users> usersArrayList, ArrayList<ChatList> chatListArrayList, Context context, Boolean isChat) {
         this.usersArrayList = usersArrayList;
+        this.chatListArrayList = chatListArrayList;
         this.context = context;
         this.isChat = isChat;
     }
@@ -84,12 +87,13 @@ public class UserFragmentAdapter extends RecyclerView.Adapter<UserFragmentAdapte
                 bottomSheetProfileDetailUser.show(manager, "edit");
             }
         });
-
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, MessageActivity.class);
                 intent.putExtra("userid", users.getId());
+                if (isChat)
+                    intent.putExtra("symmetricKey", chatListArrayList.get(holder.getAdapterPosition()).getSymmetricKey());
                 context.startActivity(intent);
             }
         });

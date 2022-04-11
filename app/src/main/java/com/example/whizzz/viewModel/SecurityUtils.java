@@ -7,24 +7,77 @@ import android.util.Base64;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 
 public class SecurityUtils {
-    public static String encryptMessage(String publicKeyString, String plainText) {
-        return null;
+    public static final String AES_CIPHER = "AES/CBC/PKCS5Padding";
+    public static final int AES_KEY_LENGTH = 256;
+
+    public static String encryptMessage(String symmetricKey, String plainText) {
+        byte[] symmetricKeyBytes = keyBytesFromString(symmetricKey);
+
+        String cipherText = null;
+        String ivString = null;
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(symmetricKeyBytes, "AES");
+            Cipher cipher = Cipher.getInstance(AES_CIPHER);
+
+            SecureRandom randomSecureRandom = new SecureRandom();
+            byte[] iv = new byte[cipher.getBlockSize()];
+            randomSecureRandom.nextBytes(iv);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+            byte[] cipherTextBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+            cipherText = Base64.encodeToString(cipherTextBytes, Base64.NO_WRAP | Base64.NO_PADDING);
+            ivString = Base64.encodeToString(iv, Base64.NO_WRAP | Base64.NO_PADDING);
+        } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return String.format("%s,%s", ivString, cipherText);
+    }
+
+    public static String decryptMessage(String symmetricKey, String ivAndCipher) {
+        String ivString = ivAndCipher.split(",")[0];
+        String cipherText = ivAndCipher.split(",")[1];
+        byte[] iv = Base64.decode(ivString, Base64.NO_WRAP | Base64.NO_PADDING);
+        byte[] cipherTextBytes = Base64.decode(cipherText, Base64.NO_WRAP | Base64.NO_PADDING);
+        byte[] symmetricKeyBytes = keyBytesFromString(symmetricKey);
+
+        SecretKeySpec secretKey = new SecretKeySpec(symmetricKeyBytes, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+        String plainText = null;
+        try {
+            Cipher cipher = Cipher.getInstance(AES_CIPHER);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+            byte[] plainTextBytes = cipher.doFinal(cipherTextBytes);
+            plainText = new String(plainTextBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return plainText;
     }
 
     public static String encryptKey(String publicKeyString, String plainText) {
-        byte[] publicKeyBytes = Base64.decode(publicKeyString, Base64.DEFAULT);
+        byte[] publicKeyBytes = keyBytesFromString(publicKeyString);
         String cipherText = null;
         try {
             Key publicKey = loadPublicRSAKey(publicKeyBytes);
@@ -38,7 +91,7 @@ public class SecurityUtils {
         return cipherText;
     }
 
-    public static String decryptMessage(Context context, String cipherText) {
+    public static String decryptKey(Context context, String cipherText) {
         byte[] privateKeyBytes = Base64.decode(PreferenceManager.getDefaultSharedPreferences(context).getString("private_key", null), Base64.DEFAULT);
         String plainText = "";
         try {
@@ -70,10 +123,23 @@ public class SecurityUtils {
         return fact.generatePublic(spec);
     }
 
-    public static SecretKey generateAESKey(int n) throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        keyGenerator.init(n);
+    public static SecretKey generateAESKey() {
+        KeyGenerator keyGenerator = null;
+        try {
+            keyGenerator = KeyGenerator.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        keyGenerator.init(AES_KEY_LENGTH);
         SecretKey key = keyGenerator.generateKey();
         return key;
+    }
+
+    public static String keyToString(Key key) {
+        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
+    }
+
+    public static byte[] keyBytesFromString(String string) {
+        return Base64.decode(string, Base64.DEFAULT);
     }
 }

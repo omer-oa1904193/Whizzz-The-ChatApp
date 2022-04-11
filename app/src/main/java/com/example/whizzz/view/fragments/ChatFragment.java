@@ -83,6 +83,7 @@ public class ChatFragment extends Fragment {
         databaseViewModel.getChaListUserDataSnapshot.observe(this, new Observer<DataSnapshot>() {
             @Override
             public void onChanged(DataSnapshot dataSnapshot) {
+                userList.clear();
                 for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
                     ChatList chatList = dataSnapshot1.getValue(ChatList.class);
                     userList.add(chatList);
@@ -117,7 +118,7 @@ public class ChatFragment extends Fragment {
                     relative_layout_chat_fragment.setVisibility(View.GONE);
                 }
 
-                userAdapter = new UserFragmentAdapter(mUsers, context, true);
+                userAdapter = new UserFragmentAdapter(mUsers, userList, context, true);
                 recyclerView_chat_fragment.setAdapter(userAdapter);
             }
         });

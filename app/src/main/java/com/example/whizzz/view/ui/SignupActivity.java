@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.whizzz.R;
 import com.example.whizzz.viewModel.DatabaseViewModel;
+import com.example.whizzz.viewModel.SecurityUtils;
 import com.example.whizzz.viewModel.SignInViewModel;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
@@ -157,7 +158,7 @@ public class SignupActivity extends AppCompatActivity {
                             .apply();
 
                     getUserSession();
-                    addUserInDatabase(userName, emailId, userId, Base64.encodeToString(pair.getPublic().getEncoded(), Base64.DEFAULT));
+                    addUserInDatabase(userName, emailId, userId, SecurityUtils.keyToString(pair.getPublic()));
                     Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish();

@@ -26,11 +26,13 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageH
     private ArrayList<Chats> chatArrayList;
     private Context context;
     private String currentUser_sender;
+    private String chatSymmetricKey;
 
-    public MessageAdapter(ArrayList<Chats> chatArrayList, Context context, String currentUser_sender) {
+    public MessageAdapter(ArrayList<Chats> chatArrayList, Context context, String currentUser_sender, String chatSymmetricKey) {
         this.chatArrayList = chatArrayList;
         this.context = context;
         this.currentUser_sender = currentUser_sender;
+        this.chatSymmetricKey = chatSymmetricKey;
     }
 
 
@@ -50,7 +52,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageH
     @Override
     public void onBindViewHolder(@NonNull MessageHolder holder, int position) {
         Chats chats = chatArrayList.get(position);
-        String message = SecurityUtils.decryptMessage(holder.itemView.getContext(), chats.getMessage());
+
+        String message = SecurityUtils.decryptMessage(chatSymmetricKey, chats.getMessage());
         String timeStamp = chats.getTimestamp();
         boolean isSeen = chats.getSeen();
         long intTimeStamp = Long.parseLong(timeStamp);

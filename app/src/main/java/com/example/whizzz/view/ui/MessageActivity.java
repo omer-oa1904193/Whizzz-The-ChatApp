@@ -40,7 +40,11 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+
+import javax.crypto.SecretKey;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import retrofit2.Call;
@@ -78,6 +82,7 @@ public class MessageActivity extends AppCompatActivity {
     APIService apiService;
     boolean notify = false;
     private String profile_user_public_key;
+    private String chatSymmetricKey;
 
 
     @Override
@@ -86,6 +91,9 @@ public class MessageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_message);
 
         userId_receiver = getIntent().getStringExtra("userid");
+        chatSymmetricKey = getIntent().getStringExtra("symmetricKey");
+        if (chatSymmetricKey == null)
+            chatSymmetricKey = SecurityUtils.keyToString(SecurityUtils.generateAESKey());
 
         init();
         getCurrentFirebaseUser();
@@ -105,7 +113,7 @@ public class MessageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 notify = true;
 
-                chat = SecurityUtils.encryptMessage( profile_user_public_key, et_chat.getText().toString().trim());
+                chat = SecurityUtils.encryptMessage(chatSymmetricKey, et_chat.getText().toString().trim());
                 if (!chat.equals("")) {
                     addChatInDataBase();
                 } else {
@@ -168,6 +176,10 @@ public class MessageActivity extends AppCompatActivity {
                     Glide.with(getApplicationContext()).load(profileImageURL).into(iv_profile_image);
                 }
                 profile_user_public_key = user.getPublicKey();
+
+                //if first time
+                Key symmetricKey;
+
                 fetchChatFromDatabase(userId_receiver, userId_sender);
             }
         });
@@ -214,7 +226,7 @@ public class MessageActivity extends AppCompatActivity {
                         chatsArrayList.add(chats);
                     }
 
-                    messageAdapter = new MessageAdapter(chatsArrayList, context, userId_sender);
+                    messageAdapter = new MessageAdapter(chatsArrayList, context, userId_sender, chatSymmetricKey);
                     recyclerView.setAdapter(messageAdapter);
                 }
             }
@@ -225,7 +237,8 @@ public class MessageActivity extends AppCompatActivity {
 
         long tsLong = System.currentTimeMillis();
         timeStamp = Long.toString(tsLong);
-        databaseViewModel.addChatDb(userId_receiver, userId_sender, chat, timeStamp);
+
+        databaseViewModel.addChatDb(userId_receiver, userId_sender, chat, timeStamp, chatSymmetricKey);
         databaseViewModel.successAddChatDb.observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean aBoolean) {

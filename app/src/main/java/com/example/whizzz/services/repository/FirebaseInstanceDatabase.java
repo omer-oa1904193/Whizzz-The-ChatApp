@@ -10,6 +10,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.whizzz.services.model.Chats;
+import com.example.whizzz.viewModel.SecurityUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -151,7 +152,7 @@ public class FirebaseInstanceDatabase {
         return fetchUserChat;
     }
 
-    public MutableLiveData<Boolean> addChatsInDatabase(String receiverId, String senderId, String message, String timestamp) {
+    public MutableLiveData<Boolean> addChatsInDatabase(String receiverId, String senderId, String message, String timestamp, String symmetricKey) {
         final MutableLiveData<Boolean> successAddChatsDb = new MutableLiveData<>();
 
         HashMap<String, Object> hashMap = new HashMap<>();
@@ -185,6 +186,7 @@ public class FirebaseInstanceDatabase {
                 if (!dataSnapshot.exists()) {
                     chatRef.child("id").setValue(receiverId);
                     chatRef.child("timestamp").setValue(timestamp);
+                    chatRef.child("symmetricKey").setValue(symmetricKey);
                 }
             }
 
@@ -204,6 +206,7 @@ public class FirebaseInstanceDatabase {
                 if (!dataSnapshot.exists()) {
                     chatRef2.child("id").setValue(senderId);
                     chatRef2.child("timestamp").setValue(timestamp);
+                    chatRef2.child("symmetricKey").setValue(symmetricKey);
                 }
             }
 
