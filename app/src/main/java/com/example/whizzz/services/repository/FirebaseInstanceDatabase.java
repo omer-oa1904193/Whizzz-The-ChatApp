@@ -149,7 +149,7 @@ public class FirebaseInstanceDatabase {
         return fetchUserChat;
     }
 
-    public MutableLiveData<Boolean> addChatsInDatabase(String receiverId, String senderId, String message, String timestamp, String symmetricKey) {
+    public MutableLiveData<Boolean> addChatsInDatabase(String receiverId, String senderId, String message, String timestamp, String symmetricKeyForSender, String symmetricKeyForReceiver) {
         final MutableLiveData<Boolean> successAddChatsDb = new MutableLiveData<>();
 
         HashMap<String, Object> hashMap = new HashMap<>();
@@ -183,7 +183,7 @@ public class FirebaseInstanceDatabase {
                 if (!dataSnapshot.exists()) {
                     chatRef.child("id").setValue(receiverId);
                     chatRef.child("timestamp").setValue(timestamp);
-                    chatRef.child("symmetricKey").setValue(symmetricKey);
+                    chatRef.child("symmetricKey").setValue(symmetricKeyForSender);
                 }
             }
 
@@ -203,7 +203,7 @@ public class FirebaseInstanceDatabase {
                 if (!dataSnapshot.exists()) {
                     chatRef2.child("id").setValue(senderId);
                     chatRef2.child("timestamp").setValue(timestamp);
-                    chatRef2.child("symmetricKey").setValue(symmetricKey);
+                    chatRef2.child("symmetricKey").setValue(symmetricKeyForReceiver);
                 }
             }
 

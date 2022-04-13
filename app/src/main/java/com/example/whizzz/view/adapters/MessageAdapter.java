@@ -53,7 +53,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageH
     public void onBindViewHolder(@NonNull MessageHolder holder, int position) {
         Chats chats = chatArrayList.get(position);
 
-        String message = SecurityUtils.decryptMessage(SecurityUtils.decryptSymmetricKey(context, chatSymmetricKey), chats.getMessage());
+        String message = SecurityUtils.decryptMessage(chatSymmetricKey, chats.getMessage());
         String timeStamp = chats.getTimestamp();
         boolean isSeen = chats.getSeen();
         long intTimeStamp = Long.parseLong(timeStamp);

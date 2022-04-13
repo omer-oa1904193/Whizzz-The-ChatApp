@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide;
 import com.example.whizzz.R;
 import com.example.whizzz.services.model.ChatList;
 import com.example.whizzz.services.model.Users;
+import com.example.whizzz.utils.SecurityUtils;
 import com.example.whizzz.view.fragments.BottomSheetProfileDetailUser;
 import com.example.whizzz.view.ui.MessageActivity;
 
@@ -93,7 +94,7 @@ public class UserFragmentAdapter extends RecyclerView.Adapter<UserFragmentAdapte
                 Intent intent = new Intent(context, MessageActivity.class);
                 intent.putExtra("userid", users.getId());
                 if (isChat)
-                    intent.putExtra("symmetricKey", chatListArrayList.get(holder.getAdapterPosition()).getSymmetricKey());
+                    intent.putExtra("symmetricKey", SecurityUtils.decryptSymmetricKey(context, chatListArrayList.get(holder.getAdapterPosition()).getSymmetricKey()));
                 context.startActivity(intent);
             }
         });

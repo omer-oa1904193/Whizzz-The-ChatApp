@@ -77,7 +77,8 @@ public class MessageActivity extends AppCompatActivity {
 
     APIService apiService;
     boolean notify = false;
-    private String profile_user_public_key;
+    private String my_public_key;
+    private String other_public_key;
     private String chatSymmetricKey;
     public static final String PREFS_ID_SYMMETRIC_KEY_MAP = "id_to_symmetric_key_map";
 
@@ -87,9 +88,12 @@ public class MessageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_message);
 
         userId_receiver = getIntent().getStringExtra("userid");
-        chatSymmetricKey = getIntent().getStringExtra("symmetricKey");
 
         init();
+        chatSymmetricKey = getIntent().getStringExtra("symmetricKey");
+        if (chatSymmetricKey == null)
+            chatSymmetricKey = SecurityUtils.keyToString(SecurityUtils.generateAESKey());
+
         getCurrentFirebaseUser();
         fetchAndSaveCurrentProfileTextAndData();
 
@@ -106,7 +110,7 @@ public class MessageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 notify = true;
 
-                chat = SecurityUtils.encryptMessage(SecurityUtils.decryptSymmetricKey(context, chatSymmetricKey), et_chat.getText().toString().trim());
+                chat = SecurityUtils.encryptMessage(chatSymmetricKey, et_chat.getText().toString().trim());
                 if (!chat.equals("")) {
                     addChatInDataBase();
                 } else {
@@ -131,6 +135,13 @@ public class MessageActivity extends AppCompatActivity {
             public void onChanged(FirebaseUser firebaseUser) {
                 currentFirebaseUser = firebaseUser;
                 userId_sender = currentFirebaseUser.getUid();
+                databaseViewModel.fetchSelectedUserProfileData(userId_sender);
+                databaseViewModel.fetchSelectedProfileUserData.observe(MessageActivity.this, new Observer<DataSnapshot>() {
+                    @Override
+                    public void onChanged(DataSnapshot dataSnapshot) {
+                        my_public_key = dataSnapshot.getValue(Users.class).getPublicKey();
+                    }
+                });
             }
         });
     }
@@ -168,15 +179,7 @@ public class MessageActivity extends AppCompatActivity {
                 } else {
                     Glide.with(getApplicationContext()).load(profileImageURL).into(iv_profile_image);
                 }
-                profile_user_public_key = user.getPublicKey();
-                if (chatSymmetricKey == null) {
-                    String keyPlainText = SecurityUtils.keyToString(SecurityUtils.generateAESKey());
-                    //save symmetric key
-//                    HashMap<String, String> symmetricKeys = Utils.loadHashMapFromPrefs(context, );
-//                    symmetricKeys.get()
-//                    Utils.saveHashMapToPrefs(context, PREFS_ID_SYMMETRIC_KEY_MAP, symmetricKeys);
-                    chatSymmetricKey = SecurityUtils.encryptSymmetricKey(profile_user_public_key, keyPlainText);
-                }
+                other_public_key = user.getPublicKey();
                 fetchChatFromDatabase(userId_receiver, userId_sender);
             }
         });
@@ -235,7 +238,12 @@ public class MessageActivity extends AppCompatActivity {
         long tsLong = System.currentTimeMillis();
         timeStamp = Long.toString(tsLong);
 
-        databaseViewModel.addChatDb(userId_receiver, userId_sender, chat, timeStamp, chatSymmetricKey);
+        //encrypt with receiver public key
+        String symmetricKyeForSender = SecurityUtils.encryptSymmetricKey(my_public_key, chatSymmetricKey);
+        //encrypt with sender public key
+        String symmetricKyeForReceiver = SecurityUtils.encryptSymmetricKey(other_public_key, chatSymmetricKey);
+
+        databaseViewModel.addChatDb(userId_receiver, userId_sender, chat, timeStamp, symmetricKyeForSender, symmetricKyeForReceiver);
         databaseViewModel.successAddChatDb.observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean aBoolean) {
