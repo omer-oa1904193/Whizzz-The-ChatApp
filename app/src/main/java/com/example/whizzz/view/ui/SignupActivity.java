@@ -2,7 +2,6 @@ package com.example.whizzz.view.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Base64;
@@ -21,7 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.whizzz.R;
 import com.example.whizzz.viewModel.DatabaseViewModel;
-import com.example.whizzz.viewModel.SecurityUtils;
+import com.example.whizzz.utils.SecurityUtils;
 import com.example.whizzz.viewModel.SignInViewModel;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
@@ -33,7 +32,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
-import java.util.prefs.Preferences;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -146,7 +144,7 @@ public class SignupActivity extends AppCompatActivity {
                     //generate key pair
                     KeyPairGenerator generator = null;
                     try {
-                        generator = KeyPairGenerator.getInstance("RSA");
+                        generator = KeyPairGenerator.getInstance(SecurityUtils.RSA_CIPHER);
                         generator.initialize(4096);
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();

@@ -1,9 +1,8 @@
-package com.example.whizzz.viewModel;
+package com.example.whizzz.utils;
 
 import android.content.Context;
 import android.preference.PreferenceManager;
 import android.util.Base64;
-
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -13,7 +12,6 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -29,6 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class SecurityUtils {
     public static final String AES_CIPHER = "AES/CBC/PKCS5Padding";
+    public static final String RSA_CIPHER = "RSA";
     public static final int AES_KEY_LENGTH = 256;
 
     public static String encryptMessage(String symmetricKey, String plainText) {
@@ -47,8 +46,8 @@ public class SecurityUtils {
 
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
             byte[] cipherTextBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-            cipherText = Base64.encodeToString(cipherTextBytes, Base64.NO_WRAP | Base64.NO_PADDING);
-            ivString = Base64.encodeToString(iv, Base64.NO_WRAP | Base64.NO_PADDING);
+            cipherText = Base64.encodeToString(cipherTextBytes, Base64.DEFAULT);
+            ivString = Base64.encodeToString(iv, Base64.DEFAULT);
         } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -58,8 +57,8 @@ public class SecurityUtils {
     public static String decryptMessage(String symmetricKey, String ivAndCipher) {
         String ivString = ivAndCipher.split(",")[0];
         String cipherText = ivAndCipher.split(",")[1];
-        byte[] iv = Base64.decode(ivString, Base64.NO_WRAP | Base64.NO_PADDING);
-        byte[] cipherTextBytes = Base64.decode(cipherText, Base64.NO_WRAP | Base64.NO_PADDING);
+        byte[] iv = Base64.decode(ivString, Base64.DEFAULT);
+        byte[] cipherTextBytes = Base64.decode(cipherText, Base64.DEFAULT);
         byte[] symmetricKeyBytes = keyBytesFromString(symmetricKey);
 
         SecretKeySpec secretKey = new SecretKeySpec(symmetricKeyBytes, "AES");
@@ -76,30 +75,30 @@ public class SecurityUtils {
         return plainText;
     }
 
-    public static String encryptKey(String publicKeyString, String plainText) {
+    public static String encryptSymmetricKey(String publicKeyString, String plainTextSymmetricKey) {
         byte[] publicKeyBytes = keyBytesFromString(publicKeyString);
         String cipherText = null;
         try {
             Key publicKey = loadPublicRSAKey(publicKeyBytes);
-            Cipher encryptCipher = Cipher.getInstance("RSA");
+            Cipher encryptCipher = Cipher.getInstance(RSA_CIPHER);
             encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            byte[] cipherTextBytes = encryptCipher.doFinal(plainText.getBytes());
-            cipherText = Base64.encodeToString(cipherTextBytes, Base64.NO_WRAP | Base64.NO_PADDING);
+            byte[] cipherTextBytes = encryptCipher.doFinal(Base64.decode(plainTextSymmetricKey.getBytes(), Base64.DEFAULT));
+            cipherText = Base64.encodeToString(cipherTextBytes, Base64.DEFAULT);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
         return cipherText;
     }
 
-    public static String decryptKey(Context context, String cipherText) {
+    public static String decryptSymmetricKey(Context context, String cipherTextSymmetricKey) {
         byte[] privateKeyBytes = Base64.decode(PreferenceManager.getDefaultSharedPreferences(context).getString("private_key", null), Base64.DEFAULT);
         String plainText = "";
         try {
             Key privateKey = loadPrivateRSAKey(privateKeyBytes);
-            Cipher decryptCipher = Cipher.getInstance("RSA");
+            Cipher decryptCipher = Cipher.getInstance(RSA_CIPHER);
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] cipherTextBytes = Base64.decode(cipherText, Base64.NO_WRAP);
-            plainText = new String(decryptCipher.doFinal(cipherTextBytes), StandardCharsets.UTF_8);
+            byte[] cipherTextBytes = Base64.decode(cipherTextSymmetricKey, Base64.DEFAULT);
+            plainText = Base64.encodeToString(decryptCipher.doFinal(cipherTextBytes), Base64.DEFAULT);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -113,13 +112,13 @@ public class SecurityUtils {
 
     public static Key loadPrivateRSAKey(byte[] stored) throws GeneralSecurityException {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(stored);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+        KeyFactory kf = KeyFactory.getInstance(RSA_CIPHER);
         return kf.generatePrivate(keySpec);
     }
 
     public static Key loadPublicRSAKey(byte[] stored) throws GeneralSecurityException {
         X509EncodedKeySpec spec = new X509EncodedKeySpec(stored);
-        KeyFactory fact = KeyFactory.getInstance("RSA");
+        KeyFactory fact = KeyFactory.getInstance(RSA_CIPHER);
         return fact.generatePublic(spec);
     }
 

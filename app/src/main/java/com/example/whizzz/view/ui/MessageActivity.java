@@ -26,12 +26,12 @@ import com.example.whizzz.services.notifications.Data;
 import com.example.whizzz.services.notifications.MyResponse;
 import com.example.whizzz.services.notifications.Sender;
 import com.example.whizzz.services.notifications.Token;
+import com.example.whizzz.utils.SecurityUtils;
 import com.example.whizzz.view.adapters.MessageAdapter;
 import com.example.whizzz.view.fragments.APIService;
 import com.example.whizzz.view.fragments.BottomSheetProfileDetailUser;
 import com.example.whizzz.viewModel.DatabaseViewModel;
 import com.example.whizzz.viewModel.LogInViewModel;
-import com.example.whizzz.viewModel.SecurityUtils;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -40,11 +40,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-
-import javax.crypto.SecretKey;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import retrofit2.Call;
@@ -83,7 +79,7 @@ public class MessageActivity extends AppCompatActivity {
     boolean notify = false;
     private String profile_user_public_key;
     private String chatSymmetricKey;
-
+    public static final String PREFS_ID_SYMMETRIC_KEY_MAP = "id_to_symmetric_key_map";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,13 +88,10 @@ public class MessageActivity extends AppCompatActivity {
 
         userId_receiver = getIntent().getStringExtra("userid");
         chatSymmetricKey = getIntent().getStringExtra("symmetricKey");
-        if (chatSymmetricKey == null)
-            chatSymmetricKey = SecurityUtils.keyToString(SecurityUtils.generateAESKey());
 
         init();
         getCurrentFirebaseUser();
         fetchAndSaveCurrentProfileTextAndData();
-
 
         iv_profile_image.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,7 +106,7 @@ public class MessageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 notify = true;
 
-                chat = SecurityUtils.encryptMessage(chatSymmetricKey, et_chat.getText().toString().trim());
+                chat = SecurityUtils.encryptMessage(SecurityUtils.decryptSymmetricKey(context, chatSymmetricKey), et_chat.getText().toString().trim());
                 if (!chat.equals("")) {
                     addChatInDataBase();
                 } else {
@@ -176,10 +169,14 @@ public class MessageActivity extends AppCompatActivity {
                     Glide.with(getApplicationContext()).load(profileImageURL).into(iv_profile_image);
                 }
                 profile_user_public_key = user.getPublicKey();
-
-                //if first time
-                Key symmetricKey;
-
+                if (chatSymmetricKey == null) {
+                    String keyPlainText = SecurityUtils.keyToString(SecurityUtils.generateAESKey());
+                    //save symmetric key
+//                    HashMap<String, String> symmetricKeys = Utils.loadHashMapFromPrefs(context, );
+//                    symmetricKeys.get()
+//                    Utils.saveHashMapToPrefs(context, PREFS_ID_SYMMETRIC_KEY_MAP, symmetricKeys);
+                    chatSymmetricKey = SecurityUtils.encryptSymmetricKey(profile_user_public_key, keyPlainText);
+                }
                 fetchChatFromDatabase(userId_receiver, userId_sender);
             }
         });
